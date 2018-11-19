@@ -2,7 +2,12 @@
   <div id="app">
     <div class="ProductContainer">
       <div class="ProductContainer__filter">
-        
+        <div class="filter-option-container" v-for="(value, key) in filterOptions">
+          <h4>{{ key }}</h4>
+          <ul>
+            <li v-for="selection in value" @click="addFilterOption(`${key}_${selection.option}`)">{{ selection.option }}({{ selection.amount }})</li>
+          </ul>
+        </div>
       </div>
       <div class="ProductContainer__prods">
         <a class="ProductContainer__prod" v-for="product in displayedProducts" :href="'products/'+product.url">
@@ -37,22 +42,24 @@ export default {
   data() {
     return {
       allProducts: [],
+      filteredProducts: [],
       filterOptions: {},
       page: 1,
-      perPage: 24,
-      pages: []
+      perPage: 12,
+      pages: [],
+      activeFilters: []
     };
   },
   methods: {
     fetchProducts(pageNum) {
-      axios.get(`${window.location.href}/products.json?limit=250&page=${pageNum}`)
+      axios.get(`https://www.tailactivewear.com/collections/bottoms/products.json?limit=250&page=${pageNum}`)
         .then(response => {
           response.data.products.forEach(prod => this.getProdData({
             id: prod.id,
             title: prod.title,
             url: prod.handle,
             img: prod.images[0].src,
-            tags: prod.tags.filter(tag => tag.includes('_'))
+            tags: prod.tags.filter(tag => tag.indexOf('_') !== -1)
           }));
           if (response.data.products.length === 250) {
             this.fetchProducts(pageNum + 1);
@@ -65,8 +72,8 @@ export default {
     getProdData(prod) {
       this.allProducts.push(prod);
       prod.tags.forEach(tag => {
-        let filterKey = tag.split('_')[0].toLowerCase();
-        let filterValue = tag.split('_')[1].toLowerCase();
+        let filterKey = tag.split('_')[0];
+        let filterValue = tag.split('_')[1];
         if (!Array.isArray(this.filterOptions[filterKey])) {
           this.filterOptions[filterKey] = [{
             option: filterValue,
@@ -87,6 +94,9 @@ export default {
     },
     setPages() {
       let numberOfPages = Math.ceil(this.allProducts.length / this.perPage);
+      if (this.activeFilters.length > 0) {
+        numberOfPages = Math.ceil(this.filteredProducts.length / this.perPage)
+      }
       this.pages = Array.from(Array(numberOfPages)).map((e,i)=>i+1)
     },
     paginate(prods) {
@@ -95,10 +105,21 @@ export default {
       let from = (page * perPage) - perPage;
       let to = (page * perPage);
       return  prods.slice(from, to);
+    },
+    addFilterOption(tag) {
+      let index = this.activeFilters.indexOf(tag);
+      index === -1 ? this.activeFilters.push(tag) : this.activeFilters.splice(index, 1);
+
+      
+
+      this.setPages();
     }
   },
   computed: {
     displayedProducts() {
+      if (this.activeFilters.length > 0) {
+        return this.paginate(this.filteredProducts);
+      } 
       return this.paginate(this.allProducts);
     }
   },
@@ -115,9 +136,18 @@ export default {
   margin: 0 auto 150px;
  }
 
+ .ProductContainer {
+  display: flex;
+  align-items: flex-start;
+ }
+ .ProductContainer__filter {
+  width: 25%;
+ }
+
  .ProductContainer__prods {
   display: flex;
   flex-flow: row wrap;
+  width: 75%;
  }
 
  .ProductContainer__prod {
