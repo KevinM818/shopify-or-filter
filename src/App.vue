@@ -14,22 +14,22 @@
           <img :src="product.img">
           <h3>{{ product.title }}</h3>
         </a>
+        <div class="Pagination" v-if="pages.length > 1">
+          <button v-if="page != 1" @click="page--"><<</button>
+          <span v-if="pages.length > 6">
+            <span v-for="pageNumber, index in pages">
+              <button @click="page = pageNumber" v-if="(pageNumber >= page -2 && pageNumber <= page + 2) || pageNumber === 1 || pageNumber === pages[pages.length - 1]">{{ pageNumber }}</button>
+              <span v-if="(page - 2 > 2 && index === 0) || (page + 2 < pages[pages.length - 2] && pageNumber === page + 2)">...</span>
+            </span>
+          </span>
+          <span v-else>
+            <span  v-for="pageNum in pages">
+              <button @click="page = pageNum">{{ pageNum }}</button>
+            </span>
+          </span>
+          <button @click="page++" v-if="page < pages.length" >>></button>
+        </div>
       </div>
-    </div>
-    <div class="Pagination" v-if="pages.length > 1">
-      <button v-if="page != 1" @click="page--"><<</button>
-      <span v-if="pages.length > 6">
-        <span v-for="pageNumber, index in pages">
-          <button @click="page = pageNumber" v-if="(pageNumber >= page -2 && pageNumber <= page + 2) || pageNumber === 1 || pageNumber === pages[pages.length - 1]">{{ pageNumber }}</button>
-          <span v-if="(page - 2 > 2 && index === 0) || (page + 2 < pages[pages.length - 2] && pageNumber === page + 2)">...</span>
-        </span>
-      </span>
-      <span v-else>
-        <span  v-for="pageNum in pages">
-          <button @click="page = pageNum">{{ pageNum }}</button>
-        </span>
-      </span>
-      <button @click="page++" v-if="page < pages.length" >>></button>
     </div>
   </div>
 </template>
@@ -109,9 +109,21 @@ export default {
     addFilterOption(tag) {
       let index = this.activeFilters.indexOf(tag);
       index === -1 ? this.activeFilters.push(tag) : this.activeFilters.splice(index, 1);
+      this.applyFilters();
+    },
+    applyFilters() {
+      let filters = {}
+      this.activeFilters.forEach(tag => {
+        let category = tag.split('_')[0];
+        let option = tag.split('_')[1];
+        if (!Array.isArray(filters[category])) {
+          filters[category] = [option]
+        } else {
+          filters[category].push(option);
+        }
+      });
 
-      
-
+      console.log(filters)
       this.setPages();
     }
   },
@@ -140,6 +152,11 @@ export default {
   display: flex;
   align-items: flex-start;
  }
+
+ .Pagination {
+  width: 100%;
+ }
+
  .ProductContainer__filter {
   width: 25%;
  }
