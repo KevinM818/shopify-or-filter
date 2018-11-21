@@ -5,7 +5,7 @@
         <div class="filter-option-container" v-for="(value, key) in filterOptions">
           <h4>{{ key }}</h4>
           <ul>
-            <li v-for="selection in value" @click="addFilterOption(`${key}_${selection.option}`)">{{ selection.option }}({{ selection.amount }})</li>
+            <li v-for="selection in value" @click="addFilterOption(`${key}_${selection.option}`)" :class="activeFilters.indexOf(`${key}_${selection.option}`) !== -1 ? 'active': ''">{{ selection.option }}({{ selection.amount }})</li>
           </ul>
         </div>
       </div>
@@ -45,7 +45,7 @@ export default {
       filteredProducts: [],
       filterOptions: {},
       page: 1,
-      perPage: 12,
+      perPage: 23,
       pages: [],
       activeFilters: []
     };
@@ -112,18 +112,38 @@ export default {
       this.applyFilters();
     },
     applyFilters() {
-      let filters = {}
+      let filters = {};
+      let orTags = [];
+      let andTags = [];
       this.activeFilters.forEach(tag => {
         let category = tag.split('_')[0];
         let option = tag.split('_')[1];
         if (!Array.isArray(filters[category])) {
-          filters[category] = [option]
+          filters[category] = [`${category}_${option}`]
         } else {
-          filters[category].push(option);
+          filters[category].push(`${category}_${option}`);
         }
       });
 
-      console.log(filters)
+      Object.values(filters).forEach(category => {
+        category.length > 1 ? orTags.push(...category) : andTags.push(...category);
+      });
+
+        if (orTags.length > 1) {
+          this.filteredProducts = this.allProducts.filter(product => {
+            return product.tags.some(elem => orTags.indexOf(elem) !== -1);
+          }).filter(product => {
+            return andTags.every(elem => product.tags.indexOf(elem) > -1);
+          });
+        } else {
+          this.filteredProducts = this.allProducts.filter(product => {
+            return andTags.every(elem => product.tags.indexOf(elem) > -1);
+          });
+       }
+
+      console.log('OR', orTags);
+      console.log('AND', andTags);
+
       this.setPages();
     }
   },
@@ -175,5 +195,9 @@ export default {
 
  img {
   max-width: 100%;
+ }
+
+ li.active {
+  color: red;
  }
 </style>
