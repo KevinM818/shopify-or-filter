@@ -113,8 +113,6 @@ export default {
     },
     applyFilters() {
       let filters = {};
-      //let orTags = [];
-      //let andTags = [];
       this.activeFilters.forEach(tag => {
         let category = tag.split('_')[0];
         let option = tag.split('_')[1];
@@ -137,29 +135,7 @@ export default {
             return category.every(elem => product.tags.indexOf(elem) > -1);
           })
         }
-
-        //category.length > 1 ? orTags.push(...category) : andTags.push(...category);
       });
-
-       //  if (orTags.length > 1) {
-
-
-       //    this.filteredProducts = this.allProducts.filter(product => {
-       //      return product.tags.some(elem => orTags.indexOf(elem) !== -1);
-       //    }).filter(product => {
-       //      return andTags.every(elem => product.tags.indexOf(elem) > -1);
-       //    });
-
-
-       //  } else {
-       //    this.filteredProducts = this.allProducts.filter(product => {
-       //      return andTags.every(elem => product.tags.indexOf(elem) > -1);
-       //    });
-       // }
-      console.log(filters);
-      //console.log('OR', orTags);
-      //console.log('AND', andTags);
-
       this.setPages();
     }
   },
