@@ -9,10 +9,21 @@
           </ul>
         </div>
       </div>
+      <select @change="applySort()" v-model="activeSort">
+        <option value="Sort" selected>Sort</option>
+        <option value="best-selling">Best Selling</option>
+        <option value="title-ascending">Alphabetically, A-Z</option>
+        <option value="title-descending">Alphabetically, Z-A</option>
+        <option value="price-ascending">Price, low to high</option>
+        <option value="price-descending">Price, high to low</option>
+        <option value="created-descending">Date, new to old</option>
+        <option value="created-ascending">Date, old to new</option>
+      </select>
       <div class="ProductContainer__prods">
         <a class="ProductContainer__prod" v-for="product in displayedProducts" :href="'products/'+product.url">
           <img :src="product.img">
           <h3>{{ product.title }}</h3>
+          <p>{{ product.price }}</p>
         </a>
         <div class="Pagination" v-if="pages.length > 1">
           <button v-if="page != 1" @click="page--"><<</button>
@@ -47,7 +58,8 @@ export default {
       page: 1,
       perPage: 23,
       pages: [],
-      activeFilters: []
+      activeFilters: [],
+      activeSort: ''
     };
   },
   methods: {
@@ -59,7 +71,9 @@ export default {
             title: prod.title,
             url: prod.handle,
             img: prod.images[0].src,
-            tags: prod.tags.filter(tag => tag.indexOf('_') !== -1)
+            tags: prod.tags.filter(tag => tag.indexOf('_') !== -1),
+            price: prod.variants[0].price,
+            date: prod.created_at
           }));
           if (response.data.products.length === 250) {
             this.fetchProducts(pageNum + 1);
@@ -137,6 +151,38 @@ export default {
         }
       });
       this.setPages();
+    },
+    applySort() {
+      switch (this.activeSort) {
+        case 'best-selling':
+          location.reload();
+          break;
+        case 'title-ascending':
+          this.filteredProducts = this.filteredProducts.sort((a,b) => a.title < b.title ? -1 : a.title > b.title ? 1 : 0);
+          this.allProducts = this.allProducts.sort((a,b) => a.title < b.title ? -1 : a.title > b.title ? 1 : 0);
+          break;
+        case 'title-descending':
+          this.filteredProducts = this.filteredProducts.sort((a,b) => a.title < b.title ? -1 : a.title > b.title ? 1 : 0).reverse();
+          this.allProducts = this.allProducts.sort((a,b) => a.title < b.title ? -1 : a.title > b.title ? 1 : 0).reverse();
+          break;
+        case 'price-ascending':
+          this.filteredProducts = this.filteredProducts.sort((a,b) => parseFloat(a.price) - parseFloat(b.price));
+          this.allProducts = this.allProducts.sort((a,b) => parseFloat(a.price) - parseFloat(b.price));
+          break;
+        case 'price-descending':
+          this.filteredProducts = this.filteredProducts.sort((a,b) => parseFloat(a.price) - parseFloat(b.price)).reverse();
+          this.allProducts = this.allProducts.sort((a,b) => parseFloat(a.price) - parseFloat(b.price)).reverse();
+          break;
+        case 'created-descending':
+          this.filteredProducts = this.filteredProducts.sort((a,b) => new Date(b.date) - new Date(a.date));
+          this.allProducts = this.allProducts.sort((a,b) => new Date(b.date) - new Date(a.date));
+          break;
+        case 'created-ascending':
+          this.filteredProducts = this.filteredProducts.sort((a,b) => new Date(b.date) - new Date(a.date)).reverse();
+          this.allProducts = this.allProducts.sort((a,b) => new Date(b.date) - new Date(a.date)).reverse();
+          break; 
+      }
+      this.page = 1;
     }
   },
   computed: {
